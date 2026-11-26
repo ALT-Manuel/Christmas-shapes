@@ -1,0 +1,635 @@
+<!doctype html>
+<html lang="en">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cracker Peg Game - Shapes Edition</title>
+  <script src="/_sdk/element_sdk.js"></script>
+  <style>
+        body {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 20px;
+            font-family: 'Georgia', serif;
+            background: linear-gradient(135deg, #0f1419 0%, #1a237e 50%, #000051 100%);
+            min-height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                radial-gradient(2px 2px at 20px 30px, #fff, transparent),
+                radial-gradient(2px 2px at 40px 70px, rgba(255,255,255,0.8), transparent),
+                radial-gradient(1px 1px at 90px 40px, #fff, transparent),
+                radial-gradient(1px 1px at 130px 80px, rgba(255,255,255,0.6), transparent),
+                radial-gradient(2px 2px at 160px 30px, #fff, transparent);
+            background-repeat: repeat;
+            background-size: 200px 100px;
+            animation: snow 10s linear infinite;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        @keyframes snow {
+            0% { transform: translateY(-100px); }
+            100% { transform: translateY(100vh); }
+        }
+
+        .game-container {
+            background: linear-gradient(145deg, #1b5e20, #2e7d32);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            border: 3px solid #4caf50;
+            max-width: 500px;
+            width: 100%;
+            position: relative;
+            z-index: 2;
+        }
+
+        .game-title {
+            text-align: center;
+            color: #ffeb3b;
+            font-size: 2.2rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .instructions {
+            text-align: center;
+            color: #e8f5e8;
+            font-size: 0.95rem;
+            margin-bottom: 20px;
+            line-height: 1.4;
+        }
+
+        .board {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 30px 0;
+            padding: 30px 20px 40px 20px;
+            background: linear-gradient(145deg, #2e7d32, #388e3c);
+            border-radius: 15px;
+            border: 2px solid #4caf50;
+            position: relative;
+        }
+
+        .board::after {
+            content: '';
+            position: absolute;
+            bottom: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 30px;
+            height: 40px;
+            background: #8d6e63;
+            border-radius: 0 0 5px 5px;
+            border: 2px solid #5d4037;
+        }
+
+        .row {
+            display: flex;
+            justify-content: center;
+            margin: 8px 0;
+        }
+
+        .hole {
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            margin: 0 6px;
+            border: 2px solid #2e7d32;
+            background: rgba(46, 125, 50, 0.3);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        .hole.has-peg {
+            background: radial-gradient(circle at 30% 30%, #ff1744, #d32f2f, #b71c1c);
+            border: 2px solid #ffeb3b;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.4), inset 0 2px 5px rgba(255,255,255,0.3);
+            animation: ornament-glow 2s ease-in-out infinite alternate;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .hole.has-peg::before {
+            content: '';
+            position: absolute;
+            top: -7px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 10px;
+            height: 7px;
+            background: #ffeb3b;
+            border-radius: 2px 2px 0 0;
+            border: 1px solid #ffc107;
+        }
+
+        /* Solid Shapes (Bright colors, no black or gray) */
+        
+        /* Perfectly proportioned SVG Star */
+        .shape-star {
+            width: 24px;
+            height: 24px;
+            fill: #ffea00;
+            filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5));
+        }
+
+        .shape-triangle {
+            width: 0;
+            height: 0;
+            border-left: 13px solid transparent;
+            border-right: 13px solid transparent;
+            border-bottom: 22px solid #ff3d00;
+            filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5));
+        }
+
+        .shape-rectangle {
+            width: 26px;
+            height: 14px;
+            background-color: #00e676;
+            border: 2px solid #ffffff;
+            border-radius: 2px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.5);
+        }
+
+        .shape-square {
+            width: 18px;
+            height: 18px;
+            background-color: #00b0ff;
+            border: 2px solid #ffffff;
+            border-radius: 2px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.5);
+        }
+
+        .shape-oval {
+            width: 26px;
+            height: 16px;
+            background-color: #e040fb;
+            border: 2px solid #ffffff;
+            border-radius: 50%;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.5);
+        }
+
+        .shape-circle {
+            width: 18px;
+            height: 18px;
+            background-color: #ffffff;
+            border: 2px solid #ffea00;
+            border-radius: 50%;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.5);
+        }
+
+        .hole.has-peg:nth-child(odd) {
+            background: radial-gradient(circle at 30% 30%, #2196f3, #1976d2, #0d47a1);
+        }
+
+        .hole.has-peg:nth-child(even) {
+            background: radial-gradient(circle at 30% 30%, #4caf50, #388e3c, #1b5e20);
+        }
+
+        .hole.has-peg:nth-child(3n) {
+            background: radial-gradient(circle at 30% 30%, #ff9800, #f57c00, #e65100);
+        }
+
+        .hole.selected {
+            border-color: #ffeb3b;
+            box-shadow: 0 0 20px rgba(255, 235, 59, 0.8);
+            transform: scale(1.15);
+        }
+
+        .hole.valid-move {
+            border-color: #4caf50;
+            box-shadow: 0 0 20px rgba(76, 175, 80, 0.8);
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        @keyframes ornament-glow {
+            0% { box-shadow: 0 4px 8px rgba(0,0,0,0.4), inset 0 2px 5px rgba(255,255,255,0.3); }
+            100% { box-shadow: 0 6px 12px rgba(0,0,0,0.5), inset 0 2px 8px rgba(255,255,255,0.4), 0 0 15px rgba(255,255,255,0.3); }
+        }
+
+        .controls {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .reset-btn {
+            background: linear-gradient(145deg, #d32f2f, #b71c1c);
+            color: white;
+            border: 2px solid #ffeb3b;
+            padding: 12px 24px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+
+        .reset-btn:hover {
+            background: linear-gradient(145deg, #b71c1c, #8d1e1e);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.4), 0 0 15px rgba(255, 235, 59, 0.3);
+        }
+
+        .game-status {
+            text-align: center;
+            margin-top: 15px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #e8f5e8;
+        }
+
+        .peg-count {
+            color: #ffeb3b;
+        }
+
+        @media (max-width: 600px) {
+            .hole {
+                width: 42px;
+                height: 42px;
+                margin: 0 4px;
+            }
+            
+            .game-title {
+                font-size: 1.7rem;
+            }
+            
+            .game-container {
+                padding: 20px;
+            }
+        }
+    </style>
+  <style>@view-transition { navigation: auto; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+  <script src="https://cdn.tailwindcss.com" type="text/javascript"></script>
+ </head>
+ <body>
+  <div class="game-container">
+   <h1 class="game-title" id="gameTitle">🎄 Christmas Shapes Ornaments Game 🎄</h1>
+   <p class="instructions" id="instructionsText">となり の シェイプ の かざり を とびこえて、シェイプ の かざり を き から とって いきます。さいご に シェイプ の かざり が ひとつ だけ のこる よう に がんばり ましょう！</p>
+   <div class="board" id="gameBoard"><!-- Board will be generated by JavaScript -->
+   </div>
+   <div class="controls"><button class="reset-btn" id="resetBtn">🎁 New Tree 🎁</button>
+   </div>
+   <div class="game-status">
+    Ornaments left: <span class="peg-count" id="pegCount">14</span> <br>
+      Time: <span class="peg-count" id="gameTimer">00:00</span>
+   </div>
+  </div>
+  <script>
+        // Game state
+        let board = [];
+        let selectedHole = null;
+        let gameWon = false;
+        let gameStartTime = null;
+        let timerInterval = null;
+
+        // All 6 shapes (star, triangle, rectangle, square, oval, circle)
+        const shapeTypes = ['star', 'triangle', 'rectangle', 'square', 'oval', 'circle'];
+        let boardShapes = [];
+
+        // Default configuration
+        const defaultConfig = {
+            game_title: "🎄 Christmas Shapes Ornaments Game 🎄",
+            instructions_text: "となり の シェイプ の かざり を とびこえて、シェイプ の かざり を き から とって いきます。さいご に シェイプ の かざり が ひとつ だけ のこる よう に がんばり ましょう！",
+            reset_button_text: "🎁 New Tree 🎁"
+        };
+
+        // Board layout - triangular with 15 positions
+        const boardLayout = [
+            [0],           // Row 0: 1 hole
+            [1, 2],        // Row 1: 2 holes  
+            [3, 4, 5],     // Row 2: 3 holes
+            [6, 7, 8, 9],  // Row 3: 4 holes
+            [10, 11, 12, 13, 14] // Row 4: 5 holes
+        ];
+
+        // Valid moves - each move is [from, over, to]
+        const validMoves = [
+            // Row 0 to Row 2
+            [0, 1, 3], [0, 2, 5],
+            // Row 1 to Row 3
+            [1, 3, 6], [1, 4, 8], [2, 4, 7], [2, 5, 9],
+            // Row 2 to Row 4
+            [3, 6, 10], [3, 7, 12], [4, 7, 11], [4, 8, 13], [5, 8, 12], [5, 9, 14],
+            // Horizontal moves in bottom rows
+            [6, 7, 8], [7, 8, 9], [10, 11, 12], [11, 12, 13], [12, 13, 14],
+            // Diagonal moves
+            [3, 4, 5], [10, 6, 3], [11, 7, 4], [12, 7, 3], [12, 8, 5], [13, 8, 4], [14, 9, 5]
+        ];
+
+        function initializeBoard() {
+            board = new Array(15).fill(true);
+            board[0] = false; // Start with top hole empty
+            selectedHole = null;
+            gameWon = false;
+            gameStartTime = null;
+            
+            // Assign a random solid shape to each of the 15 positions
+            boardShapes = [];
+            for (let i = 0; i < 15; i++) {
+                const randomShape = shapeTypes[Math.floor(Math.random() * shapeTypes.length)];
+                boardShapes.push(randomShape);
+            }
+            
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+            
+            document.getElementById('gameTimer').textContent = '00:00';
+            
+            renderBoard();
+            updatePegCount();
+        }
+
+        function startTimer() {
+            if (!gameStartTime) {
+                gameStartTime = Date.now();
+                timerInterval = setInterval(updateTimer, 1000);
+            }
+        }
+
+        function updateTimer() {
+            if (gameStartTime && !gameWon) {
+                const elapsed = Math.floor((Date.now() - gameStartTime) / 1000);
+                const minutes = Math.floor(elapsed / 60);
+                const seconds = elapsed % 60;
+                const timeString = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                document.getElementById('gameTimer').textContent = timeString;
+            }
+        }
+
+        function stopTimer() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+        }
+
+        function renderBoard() {
+            const boardElement = document.getElementById('gameBoard');
+            boardElement.innerHTML = '';
+
+            boardLayout.forEach((row, rowIndex) => {
+                const rowElement = document.createElement('div');
+                rowElement.className = 'row';
+                
+                row.forEach(holeIndex => {
+                    const hole = document.createElement('div');
+                    hole.className = 'hole';
+                    hole.dataset.index = holeIndex;
+                    
+                    if (board[holeIndex]) {
+                        hole.classList.add('has-peg');
+                        const shapeName = boardShapes[holeIndex];
+                        
+                        if (shapeName === 'star') {
+                            // Create clean SVG Star
+                            const svgNS = "http://www.w3.org/2000/svg";
+                            const svg = document.createElementNS(svgNS, "svg");
+                            svg.setAttribute("class", "shape-star");
+                            svg.setAttribute("viewBox", "0 0 24 24");
+                            
+                            const polygon = document.createElementNS(svgNS, "polygon");
+                            polygon.setAttribute("points", "12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26");
+                            svg.appendChild(polygon);
+                            hole.appendChild(svg);
+                        } else {
+                            const shapeDiv = document.createElement('div');
+                            shapeDiv.className = `shape-${shapeName}`;
+                            hole.appendChild(shapeDiv);
+                        }
+                    }
+                    
+                    hole.addEventListener('click', () => handleHoleClick(holeIndex));
+                    rowElement.appendChild(hole);
+                });
+                
+                boardElement.appendChild(rowElement);
+            });
+        }
+
+        function handleHoleClick(holeIndex) {
+            if (gameWon) return;
+
+            startTimer();
+
+            const hole = document.querySelector(`[data-index="${holeIndex}"]`);
+            
+            document.querySelectorAll('.hole').forEach(h => {
+                h.classList.remove('selected', 'valid-move');
+            });
+
+            if (selectedHole === holeIndex) {
+                selectedHole = null;
+                return;
+            }
+
+            if (board[holeIndex] && selectedHole === null) {
+                selectedHole = holeIndex;
+                hole.classList.add('selected');
+                highlightValidMoves(holeIndex);
+            } else if (!board[holeIndex] && selectedHole !== null) {
+                const move = findValidMove(selectedHole, holeIndex);
+                if (move) {
+                    makeMove(move);
+                    selectedHole = null;
+                } else {
+                    selectedHole = null;
+                }
+            } else {
+                if (board[holeIndex]) {
+                    selectedHole = holeIndex;
+                    hole.classList.add('selected');
+                    highlightValidMoves(holeIndex);
+                } else {
+                    selectedHole = null;
+                }
+            }
+        }
+
+        function highlightValidMoves(fromIndex) {
+            const possibleMoves = getValidMovesFrom(fromIndex);
+            possibleMoves.forEach(move => {
+                const targetHole = document.querySelector(`[data-index="${move[2]}"]`);
+                if (targetHole) {
+                    targetHole.classList.add('valid-move');
+                }
+            });
+        }
+
+        function getValidMovesFrom(fromIndex) {
+            return validMoves.filter(move => 
+                move[0] === fromIndex && 
+                board[move[0]] && 
+                board[move[1]] && 
+                !board[move[2]]
+            ).concat(
+                validMoves.filter(move => 
+                    move[2] === fromIndex && 
+                    board[move[2]] && 
+                    board[move[1]] && 
+                    !board[move[0]]
+                ).map(move => [move[2], move[1], move[0]])
+            );
+        }
+
+        function findValidMove(from, to) {
+            const forwardMove = validMoves.find(move => 
+                move[0] === from && 
+                move[2] === to && 
+                board[from] && 
+                board[move[1]] && 
+                !board[to]
+            );
+            
+            if (forwardMove) return forwardMove;
+            
+            const reverseMove = validMoves.find(move => 
+                move[2] === from && 
+                move[0] === to && 
+                board[from] && 
+                board[move[1]] && 
+                !board[to]
+            );
+            
+            if (reverseMove) return [reverseMove[2], reverseMove[1], reverseMove[0]];
+            
+            return null;
+        }
+
+        function makeMove(move) {
+            const [from, over, to] = move;
+            
+            board[from] = false;
+            board[over] = false;
+            board[to] = true;
+            boardShapes[to] = boardShapes[from]; 
+            
+            renderBoard();
+            updatePegCount();
+            checkGameEnd();
+        }
+
+        function updatePegCount() {
+            const pegCount = board.filter(peg => peg).length;
+            document.getElementById('pegCount').textContent = pegCount;
+        }
+
+        function checkGameEnd() {
+            const pegCount = board.filter(peg => peg).length;
+            const hasValidMoves = validMoves.some(move => 
+                board[move[0]] && board[move[1]] && !board[move[2]]
+            ) || validMoves.some(move => 
+                board[move[2]] && board[move[1]] && !board[move[0]]
+            );
+
+            if (pegCount === 1) {
+                gameWon = true;
+                stopTimer();
+                const finalTime = document.getElementById('gameTimer').textContent;
+                setTimeout(() => {
+                    document.querySelector('.game-status').innerHTML = 
+                        '🎉 Perfect! You did it! 🎉<br>のこりのかざり: <span class="peg-count">1</span><br>Final time: <span class="peg-count">' + finalTime + '</span>';
+                }, 500);
+            } else if (!hasValidMoves && pegCount > 1) {
+                stopTimer();
+                const finalTime = document.getElementById('gameTimer').textContent;
+                setTimeout(() => {
+                    document.querySelector('.game-status').innerHTML = 
+                        '🎄 Good effort! You can try again! 🎄<br>のこりのかざり: <span class="peg-count">' + pegCount + '</span><br>Final time: <span class="peg-count">' + finalTime + '</span>';
+                }, 500);
+            }
+        }
+
+        function resetGame() {
+            board = new Array(15).fill(true);
+            board[0] = false;
+            selectedHole = null;
+            gameWon = false;
+            gameStartTime = null;
+            
+            boardShapes = [];
+            for (let i = 0; i < 15; i++) {
+                const randomShape = shapeTypes[Math.floor(Math.random() * shapeTypes.length)];
+                boardShapes.push(randomShape);
+            }
+            
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+            
+            const gameStatus = document.querySelector('.game-status');
+            gameStatus.innerHTML = 
+                'のこりのかざり: <span class="peg-count" id="pegCount">14</span><br>Time: <span class="peg-count" id="gameTimer">00:00</span>';
+            
+            renderBoard();
+            updatePegCount();
+        }
+
+        async function onConfigChange(config) {
+            const gameTitle = config.game_title || defaultConfig.game_title;
+            const instructionsText = config.instructions_text || defaultConfig.instructions_text;
+            const resetButtonText = config.reset_button_text || defaultConfig.reset_button_text;
+
+            document.getElementById('gameTitle').textContent = gameTitle;
+            document.getElementById('instructionsText').textContent = instructionsText;
+            document.getElementById('resetBtn').textContent = resetButtonText;
+        }
+
+        function mapToCapabilities(config) {
+            return {
+                recolorables: [],
+                borderables: [],
+                fontEditable: undefined,
+                fontSizeable: undefined
+            };
+        }
+
+        function mapToEditPanelValues(config) {
+            return new Map([
+                ["game_title", config.game_title || defaultConfig.game_title],
+                ["instructions_text", config.instructions_text || defaultConfig.instructions_text],
+                ["reset_button_text", config.reset_button_text || defaultConfig.reset_button_text]
+            ]);
+        }
+
+        if (window.elementSdk) {
+            window.elementSdk.init({
+                defaultConfig,
+                onConfigChange,
+                mapToCapabilities,
+                mapToEditPanelValues
+            });
+        }
+
+        document.getElementById('resetBtn').addEventListener('click', resetGame);
+
+        initializeBoard();
+    </script>
+ </body>
+</html>
